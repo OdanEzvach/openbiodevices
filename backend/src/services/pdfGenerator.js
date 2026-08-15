@@ -4,7 +4,20 @@ let browserInstance = null;
 
 async function getBrowser() {
   if (!browserInstance) {
-    const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+    // Detectar si estamos en Render (producción)
+    const isRender = process.env.RENDER === 'true' || process.env.NODE_ENV === 'production';
+    let chromePath;
+
+    if (isRender) {
+      // Ruta donde instalamos Chrome en el build (Render)
+      chromePath = '/opt/render/project/.render/chrome/opt/google/chrome/google-chrome';
+    } else {
+      // Ruta local (Windows)
+      chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+    }
+
+    console.log(`🔍 Usando Chrome en: ${chromePath}`);
+
     browserInstance = await puppeteer.launch({
       headless: 'new',
       executablePath: chromePath,
@@ -12,11 +25,7 @@ async function getBrowser() {
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--disable-web-security',
-        '--disable-features=IsolateOrigins,site-per-process',
-        '--ignore-certificate-errors',
-        '--disable-blink-features=AutomationControlled'
+        '--disable-gpu'
       ]
     });
   }
