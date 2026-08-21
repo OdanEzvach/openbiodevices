@@ -5,9 +5,10 @@ const cors = require('cors');
 // Importar rutas
 const convertRoutes = require('./routes/convert');
 const authRoutes = require('./routes/auth');
-const paymentRoutes = require('./routes/payment');
+// const paymentRoutes = require('./routes/payment'); // <-- ELIMINAR
 const userRoutes = require('./routes/user');
 const usageRoutes = require('./routes/usage');
+const paypalRoutes = require('./routes/paypal');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -24,11 +25,12 @@ app.use((req, res, next) => {
 // ============================================================
 // RUTAS
 // ============================================================
-app.use('/api', convertRoutes); // <-- AHORA convertRoutes es SOLO el router
+app.use('/api', convertRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api/payment', paymentRoutes);
+// app.use('/api/payment', paymentRoutes); // <-- ELIMINAR
 app.use('/api/user', userRoutes);
 app.use('/api/usage', usageRoutes);
+app.use('/api/paypal', paypalRoutes);
 
 app.get('/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date().toISOString() });
