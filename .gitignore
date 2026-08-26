@@ -32,3 +32,11 @@ dist/
 build/
 *.min.js
 *.min.css
+
+# Archivos temporales y de respaldo
+*.txt
+*.log
+*.tmp
+stripe_backup_code.txt
+dosHKax3*#$$$.txt
+rbou-*.txt
