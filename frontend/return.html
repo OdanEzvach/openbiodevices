@@ -27,10 +27,14 @@
         if (!sessionId) {
             document.getElementById('status-message').textContent = '❌ No se encontró la sesión de pago.';
             document.getElementById('status-message').className = 'error';
+            document.getElementById('return-link').style.display = 'inline-block';
             return;
         }
 
-        fetch(`/api/stripe/session-status?session_id=${sessionId}`)
+        // API base del backend en Render
+        const API_BASE = 'https://pdf-api-k6f8.onrender.com/api';
+
+        fetch(`${API_BASE}/stripe/session-status?session_id=${sessionId}`)
             .then(response => response.json())
             .then(data => {
                 const messageEl = document.getElementById('status-message');
@@ -44,9 +48,10 @@
                 document.getElementById('return-link').style.display = 'inline-block';
             })
             .catch(error => {
+                console.error('Error al verificar pago:', error);
                 document.getElementById('status-message').textContent = '❌ Error al verificar el pago. Intenta recargar la página.';
                 document.getElementById('status-message').className = 'error';
-                console.error('Error:', error);
+                document.getElementById('return-link').style.display = 'inline-block';
             });
     </script>
 </body>
