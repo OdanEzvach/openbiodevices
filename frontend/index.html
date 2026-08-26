@@ -20,17 +20,10 @@
             border-radius: 24px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.08);
             width: 100%;
-            max-width: 580px;
+            max-width: 600px;
         }
-        h1 {
-            font-size: 2rem;
-            color: #0f172a;
-            margin-bottom: 0.3rem;
-        }
-        .subtitle {
-            color: #64748b;
-            margin-bottom: 1.5rem;
-        }
+        h1 { font-size: 2rem; color: #0f172a; margin-bottom: 0.3rem; }
+        .subtitle { color: #64748b; margin-bottom: 1.5rem; }
         .auth-section {
             display: flex;
             gap: 0.5rem;
@@ -128,15 +121,9 @@
             cursor: not-allowed;
             transform: none;
         }
-        .btn-pdf {
-            background: #3b82f6;
-            color: white;
-        }
+        .btn-pdf { background: #3b82f6; color: white; }
         .btn-pdf:hover { background: #2563eb; transform: scale(1.02); }
-        .btn-screenshot {
-            background: #8b5cf6;
-            color: white;
-        }
+        .btn-screenshot { background: #8b5cf6; color: white; }
         .btn-screenshot:hover { background: #7c3aed; transform: scale(1.02); }
         #status {
             margin-top: 1rem;
@@ -161,12 +148,9 @@
             display: flex;
             justify-content: center;
             gap: 1.5rem;
+            flex-wrap: wrap;
         }
-        .footer-links a {
-            color: #3b82f6;
-            text-decoration: none;
-            cursor: pointer;
-        }
+        .footer-links a { color: #3b82f6; text-decoration: none; cursor: pointer; }
         .footer-links a:hover { text-decoration: underline; }
         .spinner {
             display: inline-block;
@@ -215,6 +199,14 @@
             transition: 0.2s;
         }
         .btn-verify:hover { background: #059669; }
+        #checkout-container {
+            margin-top: 1.5rem;
+            min-height: 300px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 0.5rem;
+            background: #fafafa;
+        }
     </style>
 </head>
 <body>
@@ -262,10 +254,9 @@
         <span>🔒 Seguro</span>
     </div>
 
-    <!-- INSTRUCCIONES PARA PAYPAL -->
+    <!-- INSTRUCCIONES -->
     <div class="instruction-note">
-        💡 Después de pagar en PayPal, cierra la pestaña y vuelve aquí.<br>
-        Haz clic en <strong>"Verificar mi suscripción"</strong> para actualizar tu plan.
+        💡 Para mejorar a Premium, haz clic en <strong>"Mejorar plan"</strong> y completa el pago seguro con Stripe.
     </div>
 
     <!-- ENLACES DE PIE DE PÁGINA -->
@@ -276,9 +267,21 @@
         <span>·</span>
         <button class="btn-verify" id="checkSubscriptionBtn">🔍 Verificar mi suscripción</button>
     </div>
+
+    <!-- CONTENEDOR PARA CHECKOUT DE STRIPE (embedded) -->
+    <div id="checkout-container"></div>
 </div>
 
+<!-- SDK de Stripe -->
+<script src="https://js.stripe.com/v3/"></script>
+
 <script>
+    // ============================================================
+    // CONFIGURACIÓN
+    // ============================================================
+    const API_BASE = 'https://pdf-api-k6f8.onrender.com/api';
+    const STRIPE_PUBLISHABLE_KEY = 'pk_test_51U8Tgj32YInX8KxEjsyFqXQth8a5lnEk3zHo1s4tMEAHhgD7ZE0vZmpiseu4z21qc0jv1FX825jSmj7QsDv9eTkT00pkEb8mNz'; // ⚠️ Reemplaza con tu clave publicable de Stripe
+
     // ============================================================
     // ELEMENTOS DEL DOM
     // ============================================================
@@ -305,13 +308,14 @@
     const upgradeLink = document.getElementById('upgradeLink');
     const pricingLink = document.getElementById('pricingLink');
     const checkSubscriptionBtn = document.getElementById('checkSubscriptionBtn');
+    const checkoutContainer = document.getElementById('checkout-container');
 
     // ============================================================
-    // CONFIGURACIÓN
+    // ESTADO
     // ============================================================
-    const API_BASE = 'https://pdf-api-k6f8.onrender.com/api';
     let authToken = localStorage.getItem('pdf_token') || null;
     let currentUser = null;
+    let stripeInstance = null;
 
     // ============================================================
     // FUNCIONES AUXILIARES
@@ -370,9 +374,7 @@
         try {
             const base64 = token.split('.')[1];
             return JSON.parse(atob(base64));
-        } catch {
-            return null;
-        }
+        } catch { return null; }
     }
 
     // ============================================================
@@ -388,6 +390,10 @@
                 userInfo.classList.remove('hidden');
                 document.getElementById('authSection').classList.add('hidden');
                 upgradeLink.classList.toggle('hidden', payload.plan === 'premium');
+                // Limpiar checkout si es premium
+                if (payload.plan === 'premium') {
+                    checkoutContainer.innerHTML = '<p style="text-align:center; color:#10b981;">✅ Ya eres Premium</p>';
+                }
             } else {
                 clearToken();
                 updateUI();
@@ -397,6 +403,7 @@
             userInfo.classList.add('hidden');
             document.getElementById('authSection').classList.remove('hidden');
             upgradeLink.classList.add('hidden');
+            checkoutContainer.innerHTML = '';
         }
     }
 
@@ -416,7 +423,7 @@
     }
 
     // ============================================================
-    // VERIFICAR PLAN DESPUÉS DE PAGO
+    // VERIFICAR PLAN
     // ============================================================
     async function checkPlanStatus() {
         if (!authToken) return;
@@ -430,7 +437,10 @@
                     currentUser = data;
                     userPlanBadge.textContent = data.plan === 'premium' ? '⭐ Premium' : 'Gratis';
                     upgradeLink.classList.toggle('hidden', data.plan === 'premium');
-                    showStatus(`✅ ${data.plan === 'premium' ? '¡Tu plan ha sido actualizado a Premium!' : 'Tu plan es Gratis' }`, false);
+                    if (data.plan === 'premium') {
+                        checkoutContainer.innerHTML = '<p style="text-align:center; color:#10b981;">✅ Ya eres Premium</p>';
+                    }
+                    showStatus(`✅ ${data.plan === 'premium' ? '¡Tu plan ha sido actualizado a Premium!' : 'Tu plan es Gratis'}`, false);
                     await fetchUsage();
                 } else {
                     showStatus(`ℹ️ Tu plan actual es ${data.plan === 'premium' ? 'Premium' : 'Gratis'}`, false);
@@ -514,6 +524,7 @@
         updateUI();
         hideStatus();
         userUsageDisplay.textContent = '0';
+        checkoutContainer.innerHTML = '';
         showStatus('👋 Sesión cerrada');
     }
 
@@ -586,9 +597,9 @@
     }
 
     // ============================================================
-    // MEJORAR PLAN (Redirige a PayPal)
+    // MEJORAR PLAN (Stripe Embedded)
     // ============================================================
-    function handleUpgrade() {
+    async function handleUpgrade() {
         if (!authToken) {
             showStatus('⚠️ Inicia sesión para mejorar tu plan', true);
             return;
@@ -602,10 +613,46 @@
             return;
         }
 
-        // Redirigir a PayPal para la suscripción (sandbox)
-        const paypalUrl = 'https://www.sandbox.paypal.com/webapps/billing/plans/subscribe?plan_id=P-28D036507E673490PNKBC7LQ';
-        window.open(paypalUrl, '_blank');
-        showStatus('🔗 Se ha abierto una nueva pestaña con PayPal. Completa el pago y luego haz clic en "Verificar mi suscripción".', false);
+        // Limpiar contenedor anterior
+        checkoutContainer.innerHTML = '<p class="loading">⏳ Preparando pago seguro...</p>';
+
+        try {
+            const response = await fetch(`${API_BASE}/stripe/create-checkout-session`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Error al crear la sesión');
+            }
+
+            const data = await response.json();
+
+            // Inicializar Stripe si no está
+            if (!stripeInstance) {
+                stripeInstance = Stripe(STRIPE_PUBLISHABLE_KEY);
+            }
+
+            // Montar el checkout incrustado
+            const checkout = await stripeInstance.initEmbeddedCheckout({
+                clientSecret: data.clientSecret,
+                onComplete: () => {
+                    // El usuario completó el pago, redirigir a return_url
+                    window.location.href = `https://pdf-frontend-675n.onrender.com/return.html?session_id=${data.clientSecret.split('_sec_')[1]}`;
+                }
+            });
+
+            checkout.mount('#checkout-container');
+
+        } catch (error) {
+            console.error('Error al iniciar checkout:', error);
+            checkoutContainer.innerHTML = `<p style="color:#ef4444;">❌ ${error.message}</p>`;
+            showStatus(`❌ ${error.message}`, true);
+        }
     }
 
     // ============================================================
@@ -646,24 +693,13 @@
 🔹 Gratis - 10 conversiones/día
 🔹 Premium - 100 conversiones/día - $5/mes
 
-El pago se procesa de forma segura con PayPal.`;
+El pago se procesa de forma segura con Stripe.`;
             alert(planInfo);
         });
     }
 
     // ============================================================
-    // DETECTAR RETORNO DE PAYPAL (por si hay parámetros en la URL)
-    // ============================================================
-    window.addEventListener('load', () => {
-        if (authToken && window.location.search.includes('success=true')) {
-            checkPlanStatus().then(() => {
-                window.history.replaceState({}, document.title, window.location.pathname);
-            });
-        }
-    });
-
-    // ============================================================
-    // INICIAR AL CARGAR EL DOM
+    // INICIAR
     // ============================================================
     document.addEventListener('DOMContentLoaded', init);
 </script>

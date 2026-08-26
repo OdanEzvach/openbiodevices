@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmación de pago</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 2rem; background: #f0f4ff; }
+        .container { max-width: 500px; margin: 0 auto; background: white; padding: 2rem; border-radius: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.08); }
+        .success { color: #10b981; font-weight: bold; }
+        .error { color: #ef4444; font-weight: bold; }
+        .loading { color: #3b82f6; }
+        .btn { display: inline-block; margin-top: 1.5rem; padding: 0.6rem 1.5rem; background: #3b82f6; color: white; text-decoration: none; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Procesando tu pago...</h1>
+        <p id="status-message" class="loading">Verificando el estado de tu suscripción...</p>
+        <a id="return-link" href="/" class="btn" style="display:none;">Volver a la aplicación</a>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('session_id');
+
+        if (!sessionId) {
+            document.getElementById('status-message').textContent = '❌ No se encontró la sesión de pago.';
+            document.getElementById('status-message').className = 'error';
+            return;
+        }
+
+        fetch(`/api/stripe/session-status?session_id=${sessionId}`)
+            .then(response => response.json())
+            .then(data => {
+                const messageEl = document.getElementById('status-message');
+                if (data.payment_status === 'paid' || data.status === 'complete') {
+                    messageEl.textContent = '✅ ¡Pago completado con éxito! Tu plan ya es Premium.';
+                    messageEl.className = 'success';
+                } else {
+                    messageEl.textContent = `ℹ️ Estado del pago: ${data.payment_status || 'pendiente'}. Si ya pagaste, espera un momento y recarga.`;
+                    messageEl.className = 'info';
+                }
+                document.getElementById('return-link').style.display = 'inline-block';
+            })
+            .catch(error => {
+                document.getElementById('status-message').textContent = '❌ Error al verificar el pago. Intenta recargar la página.';
+                document.getElementById('status-message').className = 'error';
+                console.error('Error:', error);
+            });
+    </script>
+</body>
+</html>

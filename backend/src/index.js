@@ -5,18 +5,18 @@ const cors = require('cors');
 // Importar rutas
 const convertRoutes = require('./routes/convert');
 const authRoutes = require('./routes/auth');
-// const paymentRoutes = require('./routes/payment'); // <-- ELIMINAR
 const userRoutes = require('./routes/user');
 const usageRoutes = require('./routes/usage');
-const paypalRoutes = require('./routes/paypal');
+const stripeRoutes = require('./routes/stripe');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 
+// Excluir webhook de Stripe del middleware JSON (necesita raw body)
 app.use((req, res, next) => {
-    if (req.path === '/api/payment/webhook') {
+    if (req.path === '/api/stripe/webhook') {
         return next();
     }
     express.json({ limit: '50mb' })(req, res, next);
@@ -27,10 +27,9 @@ app.use((req, res, next) => {
 // ============================================================
 app.use('/api', convertRoutes);
 app.use('/api/auth', authRoutes);
-// app.use('/api/payment', paymentRoutes); // <-- ELIMINAR
 app.use('/api/user', userRoutes);
 app.use('/api/usage', usageRoutes);
-app.use('/api/paypal', paypalRoutes);
+app.use('/api/stripe', stripeRoutes);
 
 app.get('/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date().toISOString() });
