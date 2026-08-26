@@ -14,7 +14,7 @@ router.post('/create-checkout-session', requireAuth, async (req, res) => {
         const priceId = process.env.STRIPE_PRICE_ID;
 
         const session = await stripe.checkout.sessions.create({
-            ui_mode: 'embedded',
+            ui_mode: 'embedded_page',
             line_items: [{
                 price: priceId,
                 quantity: 1,
