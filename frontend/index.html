@@ -614,7 +614,7 @@
         }
 
         // Limpiar contenedor anterior
-        checkoutContainer.innerHTML = '<p class="loading">⏳ Preparando pago seguro...</p>';
+        checkoutContainer.innerHTML = ''; // Vaciar completamente el contenedor
 
         try {
             const response = await fetch(`${API_BASE}/stripe/create-checkout-session`, {
