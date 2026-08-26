@@ -2,19 +2,18 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 
-// Importar rutas
 const convertRoutes = require('./routes/convert');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const usageRoutes = require('./routes/usage');
-const stripeRoutes = require('./routes/stripe');
+const stripeRoutes = require('./routes/stripe'); // 👈 Asegúrate de que esta línea exista
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 
-// Excluir webhook de Stripe del middleware JSON (necesita raw body)
+// Excluir webhook de Stripe del middleware JSON
 app.use((req, res, next) => {
     if (req.path === '/api/stripe/webhook') {
         return next();
@@ -22,14 +21,11 @@ app.use((req, res, next) => {
     express.json({ limit: '50mb' })(req, res, next);
 });
 
-// ============================================================
-// RUTAS
-// ============================================================
 app.use('/api', convertRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/usage', usageRoutes);
-app.use('/api/stripe', stripeRoutes);
+app.use('/api/stripe', stripeRoutes); // 👈 Asegúrate de que esta línea exista
 
 app.get('/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date().toISOString() });

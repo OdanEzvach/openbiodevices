@@ -55,7 +55,7 @@ router.get('/session-status', async (req, res) => {
     }
 });
 
-// 3. Webhook
+// 3. Webhook (requiere raw body)
 router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
     const sig = req.headers['stripe-signature'];
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
