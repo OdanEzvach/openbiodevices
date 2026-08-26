@@ -8,6 +8,7 @@ const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const usageRoutes = require('./routes/usage');
 const stripeRoutes = require('./routes/stripe'); // 👈 Asegúrate de que esta línea exista
+console.log('✅ Ruta de Stripe cargada correctamente');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -27,6 +28,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/usage', usageRoutes);
 app.use('/api/stripe', stripeRoutes); // 👈 Asegúrate de que esta línea exista
+console.log('✅ /api/stripe registrada');
 
 app.get('/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date().toISOString() });
