@@ -1,4 +1,5 @@
 const express = require('express');
+// FORZAR RE-DESPLIEGUE - 2026-08-26
 const router = express.Router();
 const Stripe = require('stripe');
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);

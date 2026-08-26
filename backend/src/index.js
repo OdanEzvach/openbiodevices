@@ -1,4 +1,5 @@
 require('dotenv').config();
+// FORZAR RE-DESPLIEGUE - 2026-08-26
 const express = require('express');
 const cors = require('cors');
 
